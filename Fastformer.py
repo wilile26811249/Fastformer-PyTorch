@@ -29,8 +29,8 @@ class Fastformer(nn.Module):
         # Model the interaction between global query vector and the key vector
         repeat_global_query = einops.repeat(global_query, 'b d -> b copy d', copy = n)
         p = repeat_global_query * key
-        beta_weight = torch.softmax(torch.mul(key, self.weight_beta) * self.scale_factor, dim = -1)
-        global_key = key * beta_weight
+        beta_weight = torch.softmax(torch.mul(p, self.weight_beta) * self.scale_factor, dim = -1)
+        global_key = p * beta_weight
         global_key = torch.einsum('b n d -> b d', global_key)
 
         # key-value
