@@ -11,6 +11,8 @@ class Fastformer(nn.Module):
         self.weight_k = nn.Linear(dim, decode_dim, bias = False)
         self.weight_v = nn.Linear(dim, decode_dim, bias = False)
         self.weight_r = nn.Linear(decode_dim, decode_dim, bias = False)
+        self.weight_alpha = nn.Parameter(torch.randn(decode_dim))
+        self.weight_beta = nn.Parameter(torch.randn(decode_dim))
         self.scale_factor = decode_dim ** -0.5
 
     def forward(self, x, mask = None):
@@ -20,14 +22,14 @@ class Fastformer(nn.Module):
         b, n, d = query.shape
 
         # Caculate the global query
-        alpha_weight = torch.softmax(query * self.scale_factor, dim = -1)
+        alpha_weight = torch.softmax(torch.mul(query, self.weight_alpha) * self.scale_factor, dim = -1)
         global_query = query * alpha_weight
         global_query = torch.einsum('b n d -> b d', global_query)
 
         # Model the interaction between global query vector and the key vector
         repeat_global_query = einops.repeat(global_query, 'b d -> b copy d', copy = n)
         p = repeat_global_query * key
-        beta_weight = torch.softmax(key * self.scale_factor, dim = -1)
+        beta_weight = torch.softmax(torch.mul(key, self.weight_beta) * self.scale_factor, dim = -1)
         global_key = key * beta_weight
         global_key = torch.einsum('b n d -> b d', global_key)
 
