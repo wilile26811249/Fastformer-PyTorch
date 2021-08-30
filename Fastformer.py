@@ -1,4 +1,5 @@
 import einops
+from einops import rearrange
 import torch
 import torch.nn as nn
 
@@ -21,9 +22,13 @@ class Fastformer(nn.Module):
         value = self.weight_v(x)
         b, n, d = query.shape
 
+        mask_value = torch.finfo(x.dtype).min
+        mask = rearrange(mask, 'b n -> b () n')
+
         # Caculate the global query
         alpha_weight = torch.softmax(torch.mul(query, self.weight_alpha) * self.scale_factor, dim = -1)
         global_query = query * alpha_weight
+        global_query = global_query.masked_fill(~mask, mask_value)
         global_query = torch.einsum('b n d -> b d', global_query)
 
         # Model the interaction between global query vector and the key vector
@@ -42,5 +47,6 @@ class Fastformer(nn.Module):
 if __name__ == '__main__':
     model = Fastformer(dim = 3, decode_dim = 8)
     x = torch.randn(4, 6, 3)
-    result = model(x)
+    mask = torch.ones(1, 8).bool()
+    result = model(x, mask)
     print(result.size())

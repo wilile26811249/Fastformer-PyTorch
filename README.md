@@ -12,7 +12,8 @@ import Fastformer
 
 model = Fastformer(dim = 3, decode_dim = 8)
 x = torch.randn(4, 6, 3)
-result = model(x)
+mask = torch.ones(1, 8).bool()
+result = model(x, mask)
 print(result.size())
 ```
 
