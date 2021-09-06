@@ -8,7 +8,7 @@ Unofficial PyTorch implementation of Fastformer based on paper [Fastformer: Addi
 ## Usage :
 ```python
 import torch
-import Fastformer
+from Fastformer import Fastformer
 
 model = Fastformer(dim = 3, decode_dim = 8)
 x = torch.randn(4, 6, 3)
